@@ -7,7 +7,7 @@ from app.models.order import OrderIn, OrderMessage
 from app.messaging.messaging import publish_order
 
 
-def create_order(app: FastAPI, order_in: OrderIn) -> OrderMessage:
+def create_order(order_in: OrderIn) -> OrderMessage:
     order_msg = OrderMessage(
         id=str(uuid4()),
         customerName=order_in.customerName,
@@ -16,5 +16,5 @@ def create_order(app: FastAPI, order_in: OrderIn) -> OrderMessage:
         createdAt=datetime.utcnow(),
     )
 
-    publish_order(app, order_msg)
+    publish_order(order_msg)
     return order_msg

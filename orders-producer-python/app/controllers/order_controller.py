@@ -9,6 +9,5 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=OrderMessage, status_code=201)
-def create_order_endpoint(order_in: OrderIn, request: Request):
-    app = request.app
-    return create_order(app, order_in)
+def create_order_endpoint(order_in: OrderIn): 
+    return create_order(order_in)
