@@ -11,3 +11,7 @@ export interface OrderMessage {
   items: OrderItem[];
   createdAt: string; 
 }
+
+export interface KitchenOrder extends OrderMessage {
+  status: "preparing" | "ready";
+}

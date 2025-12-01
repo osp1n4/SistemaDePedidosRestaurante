@@ -1,33 +1,46 @@
 // src/controllers/kitchen.controller.ts
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { OrderRepository } from "../interfaces/order.interface";
+import { KitchenOrder } from "../models/order";
 
-export interface KitchenOrder {
-  id: string;
-  customerName: string;
-  table: string;
-  items: any[];
-  createdAt: string;
-  status: "preparing" | "ready";
+// Repository debe ser inyectado desde index.ts (siempre MongoOrderRepository)
+let repo: OrderRepository | null = null;
+
+export function setOrderRepository(r: OrderRepository) {
+  repo = r;
 }
 
-let pedidosEnCocina: KitchenOrder[] = [];
-
-export function getKitchenOrders(req: Request, res: Response) {
-  res.json(pedidosEnCocina);
+export async function getKitchenOrders(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!repo) {
+      return res.status(500).json({ error: "Repository no inicializado" });
+    }
+    const payload = await repo.getAll();
+    return res.json(payload);
+  } catch (err) {
+    return next(err);
+  }
 }
 
-// agregar pedido al array y notificar
-export function addKitchenOrder(order: KitchenOrder) {
+// helpers used by worker or other internal modules — async and non-blocking
+export async function addKitchenOrder(order: KitchenOrder): Promise<void> {
+  if (!repo) {
+    throw new Error("Repository no inicializado");
+  }
   order.status = "preparing";
-  pedidosEnCocina.push(order);
-}
-  
-// marcar pedido como listo
-export function markOrderReady(id: string) {
-  const pedido = pedidosEnCocina.find(o => o.id === id);
-  if (pedido) pedido.status = "ready";
+  await repo.create(order);
 }
 
-export function removeOrderFromKitchen(id: string) {
-  pedidosEnCocina = pedidosEnCocina.filter((p) => p.id !== id);
+export async function markOrderReady(id: string): Promise<boolean> {
+  if (!repo) {
+    throw new Error("Repository no inicializado");
+  }
+  return repo.updateStatus(id, "ready");
+}
+
+export async function removeOrderFromKitchen(id: string): Promise<void> {
+  if (!repo) {
+    throw new Error("Repository no inicializado");
+  }
+  await repo.remove(id);
 }
