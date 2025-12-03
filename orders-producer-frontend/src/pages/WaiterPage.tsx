@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import OrderSidebar from '../components/OrderSidebar';
+import { EditOrderDialog } from '../components/EditOrderDialog';
 import { useOrderManagement } from '../hooks/useOrderManagement';
 import { useOrderSubmission } from '../hooks/useOrderSubmission';
 import { useActiveOrders } from '../hooks/useActiveOrders';
+import type { ActiveOrder } from '../hooks/useActiveOrders';
+import { updateOrder } from '../services/orderService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Clock, RefreshCw } from 'lucide-react';
+import { Clock, RefreshCw, Pencil } from 'lucide-react';
 import type { Product, OrderPayload } from '../types/order';
 
 const initialProducts: Product[] = [
@@ -17,36 +20,32 @@ const initialProducts: Product[] = [
   { id: 4, name: "Refresco",       price: 7000,  desc: "Refresco",    image: "/images/drink_pic.jpg" }
 ];
 
-type OrderType = 'all' | 'dine-in' | 'takeaway' | 'delivery';
+type OrderStatusFilter = 'all' | 'pending' | 'preparing' | 'ready' | 'completed';
 type MenuCategory = 'all' | 'main-course' | 'appetizers' | 'soups' | 'salads' | 'drinks';
 
-const ORDER_TYPES: { value: OrderType; label: string }[] = [
+const ORDER_STATUS_FILTERS: { value: OrderStatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'dine-in', label: 'Dine-in' },
-  { value: 'takeaway', label: 'Takeaway' },
-  { value: 'delivery', label: 'Delivery' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'preparing', label: 'Preparing' },
+  { value: 'ready', label: 'Ready' },
+  { value: 'completed', label: 'Completed' },
 ];
 
-const MENU_CATEGORIES: { value: MenuCategory; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'main-course', label: 'Main Course' },
-  { value: 'appetizers', label: 'Appetizers' },
-  { value: 'soups', label: 'Soups' },
-  { value: 'salads', label: 'Salads' },
-  { value: 'drinks', label: 'Drinks' },
-];
 
 const STATUS_CONFIG = {
   ready: { color: 'bg-green-500 hover:bg-green-600', text: 'Ready' },
   preparing: { color: 'bg-blue-500 hover:bg-blue-600', text: 'Preparing' },
   pending: { color: 'bg-orange-500 hover:bg-orange-600', text: 'Pending' },
+  completed: { color: 'bg-gray-500 hover:bg-gray-600', text: 'Completed' },
 } as const;
 
 export function WaiterPage() {
   const [products] = useState<Product[]>(initialProducts);
-  const [orderType, setOrderType] = useState<OrderType>('all');
+  const [orderStatus, setOrderStatus] = useState<OrderStatusFilter>('all');
   const [menuCategory, setMenuCategory] = useState<MenuCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingOrder, setEditingOrder] = useState<ActiveOrder | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const { order, addToOrder, changeQty, addNoteToItem, total, clearOrder } = useOrderManagement();
   const { submitOrder, successMsg } = useOrderSubmission();
@@ -88,6 +87,46 @@ export function WaiterPage() {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleEditOrder = (order: ActiveOrder) => {
+    setEditingOrder(order);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setTimeout(() => setEditingOrder(null), 200);
+  };
+
+  const handleSaveOrder = async (
+    orderId: string,
+    updates: {
+      customerName: string;
+      table: string;
+      items: {
+        productName: string;
+        quantity: number;
+        unitPrice: number;
+        note?: string | null;
+      }[];
+    }
+  ): Promise<boolean> => {
+    try {
+      const response = await updateOrder(orderId, updates);
+      
+      if (response.success) {
+        // Refresh orders to show changes
+        await refetchOrders();
+        return true;
+      } else {
+        console.error('Update failed:', response.error || response.message);
+        throw new Error(response.error?.message || 'Failed to update order');
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Main Content */}
@@ -109,11 +148,11 @@ export function WaiterPage() {
             </div>
             
             <div className="flex gap-2">
-              {ORDER_TYPES.map(({ value, label }) => (
+              {ORDER_STATUS_FILTERS.map(({ value, label }) => (
                 <Button
                   key={value}
-                  variant={orderType === value ? 'default' : 'outline'}
-                  onClick={() => setOrderType(value)}
+                  variant={orderStatus === value ? 'default' : 'outline'}
+                  onClick={() => setOrderStatus(value)}
                   className="rounded-full h-8 px-3 text-xs"
                   size="sm"
                 >
@@ -130,12 +169,15 @@ export function WaiterPage() {
             ) : activeOrders.length === 0 ? (
               <div className="text-sm text-gray-500 py-2">No active orders</div>
             ) : (
-              activeOrders.map((order) => {
+              activeOrders
+                .filter(order => orderStatus === 'all' || order.status === orderStatus)
+                .map((order) => {
                 const { color, text } = STATUS_CONFIG[order.status];
+                const isEditable = order.status === 'pending';
                 return (
                   <div 
                     key={order.fullId} 
-                    className="flex-shrink-0 bg-gray-50 rounded-lg px-4 py-2 hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200"
+                    className="shrink-0 bg-gray-50 rounded-lg px-4 py-2 hover:bg-gray-100 transition-colors border border-gray-200 relative group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="min-w-0">
@@ -157,6 +199,17 @@ export function WaiterPage() {
                         <span className="font-medium">{order.itemCount}</span>
                         <span className="text-gray-400">items</span>
                       </div>
+                      {isEditable && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditOrder(order)}
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Edit order"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -166,7 +219,7 @@ export function WaiterPage() {
         </div>
 
         {/* Menu Section */}
-        <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="flex-1 overflow-y-auto px-6 py-12">
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -179,7 +232,6 @@ export function WaiterPage() {
                   key={product.id}
                   product={product}
                   onAdd={addToOrder}
-                  onRemove={(p) => changeQty(p.id, -1)}
                   quantity={quantity}
                 />
               );
@@ -199,6 +251,15 @@ export function WaiterPage() {
           successMsg={successMsg}
         />
       </div>
+
+      {/* Edit Order Dialog */}
+      <EditOrderDialog
+        order={editingOrder}
+        open={isEditDialogOpen}
+        onClose={handleCloseEditDialog}
+        onSave={handleSaveOrder}
+        availableProducts={products}
+      />
     </div>
   );
 }
