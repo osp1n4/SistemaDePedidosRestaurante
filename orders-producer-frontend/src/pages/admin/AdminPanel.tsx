@@ -11,7 +11,7 @@ import Sidebar from '../../components/Sidebar';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 const AdminPanel: React.FC = () => {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
 
   if (!token) return <Navigate to="/session" replace />;
 

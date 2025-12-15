@@ -18,13 +18,21 @@ const ForgotPassword: React.FC = () => {
         body: JSON.stringify({ email })
       });
       const data = await res.json();
+      
+      // Manejar respuestas de error del servidor (404, 400, etc.)
+      if (!res.ok) {
+        setError(data.message || 'No se pudo enviar el correo.');
+        setLoading(false);
+        return;
+      }
+      
       if (data.success) {
         setSent(true);
       } else {
         setError(data.message || 'No se pudo enviar el correo.');
       }
-    } catch (err) {
-      setError('Error al enviar el correo.');
+    } catch {
+      setError('Error al enviar el correo. Por favor, verifica tu conexión.');
     }
     setLoading(false);
   };
@@ -34,7 +42,10 @@ const ForgotPassword: React.FC = () => {
       <form onSubmit={onSubmit} className="bg-white/90 shadow-2xl rounded-2xl px-10 py-12 w-full max-w-md flex flex-col gap-4">
         <h1 className="text-2xl font-extrabold text-neutral-800 mb-2 text-center">Recuperar Contraseña</h1>
         {sent ? (
-          <div className="text-green-600 text-center">Si el correo existe, se ha enviado un enlace para restablecer la contraseña.</div>
+          <div className="text-green-600 text-center font-medium">
+            Se ha enviado un correo con las instrucciones para recuperar tu contraseña. 
+            Por favor, revisa tu bandeja de entrada.
+          </div>
         ) : (
           <>
             {error && <div className="text-red-600 text-sm mb-2 text-center">{error}</div>}
