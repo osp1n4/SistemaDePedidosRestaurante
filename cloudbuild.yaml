@@ -1,5 +1,6 @@
 # Reemplaza 'mi-bucket-logs-builds' por el nombre real de tu bucket de logs
 logsBucket: gs://mi-bucket-logs-builds
+
 # Cloud Build pipeline for SistemaDePedidosRestaurante
 # Construye y sube imágenes de todos los servicios, luego despliega a Cloud Run
 
