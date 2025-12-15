@@ -1,0 +1,67 @@
+# Cloud Build pipeline for SistemaDePedidosRestaurante
+# Construye y sube imágenes de todos los servicios, luego despliega a Cloud Run
+
+substitutions:
+  _AR_HOSTNAME: "${_AR_HOSTNAME}"
+  _AR_PROJECT_ID: "${_AR_PROJECT_ID}"
+  _AR_REPOSITORY: "${_AR_REPOSITORY}"
+  _DEPLOY_REGION: "${_DEPLOY_REGION}"
+  _PLATFORM: "${_PLATFORM}"
+  _SERVICE_NAME: "${_SERVICE_NAME}"
+  _TRIGGER_ID: "${_TRIGGER_ID}"
+  REPO_NAME: "${REPO_NAME}"
+
+steps:
+  # Build and push admin-service
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'admin-service'
+    args: [ 'build', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA' ]
+
+  # Build and push api-gateway
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'api-gateway'
+    args: [ 'build', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA' ]
+
+  # Build and push orders-producer-frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'orders-producer-frontend'
+    args: [ 'build', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA' ]
+
+  # Build and push orders-producer-node
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'orders-producer-node'
+    args: [ 'build', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA' ]
+
+  # Build and push orders-producer-python
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'orders-producer-python'
+    args: [ 'build', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA', '.' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA' ]
+
+  # Deploy main service to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - '${_SERVICE_NAME}'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+
+images:
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA'
