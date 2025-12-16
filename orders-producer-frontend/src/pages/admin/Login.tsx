@@ -70,12 +70,11 @@ const Login: React.FC = () => {
         <form onSubmit={onSubmit} className="bg-white/90 shadow-2xl rounded-2xl px-10 py-12 w-full max-w-md flex flex-col gap-4">
           <h1 className="text-2xl font-extrabold text-neutral-800 mb-2 text-center">Bienvenido a Rápido y Sabroso</h1>
           {error && <div className="text-red-600 text-sm mb-2 text-center">{error}</div>}
-          <label className="block text-sm font-semibold text-neutral-700">Email</label>
-          <input className="border border-neutral-300 rounded-lg p-3 w-full mb-2 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition" value={email} onChange={e=>setEmail(e.target.value)} autoFocus />
-          <label className="block text-sm font-semibold text-neutral-700">Contraseña</label>
+          <label htmlFor="email" className="block text-sm font-semibold text-neutral-700">Email</label>
+          <input id="email" className="border border-neutral-300 rounded-lg p-3 w-full mb-2 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition" value={email} onChange={e=>setEmail(e.target.value)} autoFocus />
+          <label htmlFor="password" className="block text-sm font-semibold text-neutral-700">Contraseña</label>
           <div className="relative mb-4">
-            <input
-              type={showPassword ? 'text' : 'password'}
+            <input              id="password"              type={showPassword ? 'text' : 'password'}
               className="border border-neutral-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-orange-400 focus:border-transparent transition pr-12"
               value={password}
               onChange={e => setPassword(e.target.value)}

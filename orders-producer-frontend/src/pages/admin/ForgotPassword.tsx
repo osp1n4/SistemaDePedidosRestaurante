@@ -49,8 +49,8 @@ const ForgotPassword: React.FC = () => {
         ) : (
           <>
             {error && <div className="text-red-600 text-sm mb-2 text-center">{error}</div>}
-            <label className="block text-sm font-semibold text-neutral-700">Correo electrónico</label>
-            <input type="email" className="border border-neutral-300 rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition" value={email} onChange={e=>setEmail(e.target.value)} required />
+            <label htmlFor="email" className="block text-sm font-semibold text-neutral-700">Correo electrónico</label>
+            <input id="email" type="email" className="border border-neutral-300 rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition" value={email} onChange={e=>setEmail(e.target.value)} required />
             <button disabled={loading} className="bg-orange-600 hover:bg-orange-700 text-white rounded-lg px-4 py-3 w-full font-bold text-lg transition-colors shadow disabled:opacity-60">{loading ? 'Enviando...' : 'Enviar enlace'}</button>
           </>
         )}

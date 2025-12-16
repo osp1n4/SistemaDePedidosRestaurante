@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HomePage } from './pages/HomePage';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { WaiterPage } from './pages/WaiterPage';
 import { KitchenPage } from './pages/KitchenPage';
 import AdminPanel from './pages/admin/AdminPanel';
@@ -11,7 +10,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Navigate to="/session" replace />} />
         <Route path="/mesero" element={<WaiterPage />} />
         <Route path="/cocina" element={<KitchenPage />} />
         <Route path="/admin/*" element={<AdminPanel />} />
