@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies and build TypeScript
 COPY package*.json tsconfig.json ./
-RUN npm ci
+RUN npm install
 COPY src ./src
 RUN npm run build
 
@@ -14,7 +14,7 @@ WORKDIR /app
 
 # Only production dependencies and compiled output
 COPY package*.json ./
-RUN npm ci --production
+RUN npm install --production
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 8080
