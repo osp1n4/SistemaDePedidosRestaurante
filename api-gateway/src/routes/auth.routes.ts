@@ -15,7 +15,8 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
   const user = await getUserByEmail(email);
-  console.log('🔍 Usuario encontrado para forgot-password:', user);
+  // Security: Do not log user data, only confirm lookup attempt
+  console.log('🔍 Forgot-password lookup for email:', email ? 'email provided' : 'no email');
   if (!user || !user.success || !user.data) {
     // No revelar si el usuario existe o no
     return res.json({ success: true });

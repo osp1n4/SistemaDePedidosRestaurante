@@ -21,7 +21,7 @@ export async function adminLogin(email: string, password: string) {
   });
   if (!res.ok) throw new Error('Login failed');
   const data = await res.json();
-  console.log('🔍 adminLogin raw response:', data);
+  // Security: Do not log login response data
   return data;
 }
 

@@ -17,7 +17,7 @@ const Login: React.FC = () => {
     try {
       console.log('📤 Sending login request...');
       const res = await adminLogin(email, password);
-      console.log('📥 Login response:', res);
+      // Security: Do not log login response data
       if (res?.success) {
         console.log('✅ Login successful, setting auth...');
         // La respuesta está doblemente anidada: res.data.data contiene token y user
