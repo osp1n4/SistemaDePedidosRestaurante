@@ -6,19 +6,28 @@ import AdminPanel from './pages/admin/AdminPanel';
 import Login from './pages/admin/Login';
 import ForgotPassword from './pages/admin/ForgotPassword';
 import ResetPassword from './pages/admin/ResetPassword';
+import { usePageTitle } from './hooks/usePageTitle';
+
+function AppRoutes() {
+  usePageTitle();
+
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/mesero" element={<WaiterPage />} />
+      <Route path="/cocina" element={<KitchenPage />} />
+      <Route path="/admin/*" element={<AdminPanel />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/recuperar" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+    </Routes>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/mesero" element={<WaiterPage />} />
-        <Route path="/cocina" element={<KitchenPage />} />
-        <Route path="/admin/*" element={<AdminPanel />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/recuperar" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-      </Routes>
+      <AppRoutes />
     </BrowserRouter>
   );
 }
