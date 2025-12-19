@@ -11,3 +11,6 @@ logs/
 
 # Environment variables
 .env
+# Test coverage
+coverage/
+
